@@ -101,6 +101,9 @@ def main():
             st.session_state.selected_word = random.choice(st.session_state.words)
             st.session_state.words_used += 1
             st.session_state.played = False  # 重設播放狀態
+            st.session_state.generated_sent = None  # Reset
+            st.session_state.translated_sent = None  # Reset
+            st.session_state.show_translation = False  # Reset            
             ttsM(st.session_state.selected_word, openai_api_key)
             
 
