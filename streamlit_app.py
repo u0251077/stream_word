@@ -124,7 +124,7 @@ def main():
             show_translation_button = st.button("Show Translation")
             if show_translation_button:
                 st.text_area("Translated Sentence:", value=st.session_state.translated_sent, height=100)
-                st.session_state.generated_sent = False 
+                st.session_state.generated_sent = None 
 
 if __name__ == "__main__":
     main()
