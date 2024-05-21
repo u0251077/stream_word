@@ -13,8 +13,9 @@ def ttsM(text,api_key):
     input= str(text)
     )
     response.stream_to_file("speech.mp3")
-    st.audio("speech.mp3", format="audio/mpeg", loop=False, autoplay=True )
-
+    if not st.session_state.get('played', False):
+        st.audio("speech.mp3", format="audio/mpeg", loop=False, autoplay=True)
+        st.session_state['played'] = True
 
 
 def translate(sent, text,api_key):
@@ -95,9 +96,11 @@ def main():
         words_used = st.session_state.words_used
         st.write(f"已出現的單字量: {words_used} / 總單字量: {total_words}")
 
+        # 在 main 函数中，当有播放新音频的操作时，重设 session state
         if 'selected_word' not in st.session_state or st.button('Choose New Word'):
             st.session_state.selected_word = random.choice(st.session_state.words)
-            st.session_state.words_used += 1  # 更新用過的單詞數量
+            st.session_state.words_used += 1
+            st.session_state.played = False  # 重設播放狀態
             ttsM(st.session_state.selected_word, openai_api_key)
             
 
@@ -109,6 +112,7 @@ def main():
             st.session_state.generated_sent = sent 
             st.session_state.show_translation = True  
             st.session_state.translated_sent = translate_sent(sent, openai_api_key)  
+            st.session_state.played = False  # 重設播放狀態
             
 
         if 'generated_sent' in st.session_state:
