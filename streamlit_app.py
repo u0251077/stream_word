@@ -12,9 +12,8 @@ def ttsM(text,api_key):
     voice="alloy",
     input= str(text)
     )
-    speech_file_path = Path(__file__).parent / "speech.mp3"
-    response.stream_to_file(speech_file_path)
-    st.audio(speech_file_path, format="audio/mpeg", loop=True)
+    response.stream_to_file("speech.mp3")
+    st.audio("speech.mp3", format="audio/mpeg", loop=True)
 
 
 
