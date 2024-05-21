@@ -92,6 +92,8 @@ def main():
             show_translation_button = st.button("Show Translation")
             if show_translation_button:  # 新增條件，只有在點擊此按鈕後才顯示翻譯結果
                 st.text_area("Translated Sentence:", value=translated_sent, height=100)
+            if generate_sentence:
+                continue
 
 
 if __name__ == "__main__":
