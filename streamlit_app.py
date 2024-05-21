@@ -86,15 +86,16 @@ def main():
             st.write(f"Selected Word: {random_word}")
             generate_sentence = st.form_submit_button("Generate Sentence")
         if generate_sentence:
-            generate_sentence = False
             sent = makesentences(random_word,openai_api_key)
             st.text_area("Generated Sentence:", value=sent, height=100)
             translated_sent = translate_sent(sent,openai_api_key)
             show_translation_button = st.button("Show Translation")
             if show_translation_button:  # 新增條件，只有在點擊此按鈕後才顯示翻譯結果
                 st.text_area("Translated Sentence:", value=translated_sent, height=100)
-            if generate_sentence:
+            next = st.button("next")
+            if next:
                 pass
+
 
 
 if __name__ == "__main__":
