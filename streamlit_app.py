@@ -101,7 +101,7 @@ def main():
             st.session_state.words_used += 1  # 更新用過的單詞數量
 
         st.write(f"Selected Word: {st.session_state.selected_word}")
-        ttsM({st.session_state.selected_word},openai_api_key)
+        ttsM("resume",openai_api_key)
         generate_sentence = st.button("Generate Sentence")
 
         if generate_sentence:
