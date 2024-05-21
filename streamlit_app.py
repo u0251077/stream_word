@@ -8,7 +8,9 @@ import random
 
 
 
-def translate(sent, text):
+def translate(sent, text,api_key):
+    client = OpenAI(api_key=api_key)        
+    
     response = client.chat.completions.create(
         model="gpt-3.5-turbo-0125",
         messages=[
@@ -22,7 +24,8 @@ def translate(sent, text):
     return response.choices[0].message.content
 
 
-def translate_sent(sent):
+def translate_sent(sent,api_key):
+    client = OpenAI(api_key=api_key)            
     response = client.chat.completions.create(
         model="gpt-3.5-turbo-0125",
         messages=[
@@ -36,7 +39,8 @@ def translate_sent(sent):
     return response.choices[0].message.content
 
 
-def makesentences(word):
+def makesentences(word,api_key):
+    client = OpenAI(api_key=api_key)        
     temperature = random.uniform(0.5, 1.0)
     variations = ["", ".", "!", "?"]
     modified_word = word + random.choice(variations)
@@ -72,8 +76,7 @@ def main():
     st.title("文檔翻譯和例句生成")
     uploaded_file = st.file_uploader("選擇 Excel 文件", type='xlsx')
     if uploaded_file is not None:
-        api_key = openai_api_key
-        client = OpenAI(api_key=api_key)        
+    
         words = read_excel_words(uploaded_file)
         if not words:
             st.warning("Excel 文件中沒有找到任何單詞。")
@@ -83,9 +86,9 @@ def main():
             st.write(f"Selected Word: {random_word}")
             generate_sentence = st.form_submit_button("Generate Sentence")
         if generate_sentence:
-            sent = makesentences(random_word)
+            sent = makesentences(random_word,openai_api_key)
             st.text_area("Generated Sentence:", value=sent, height=100)
-            translated_sent = translate_sent(sent)
+            translated_sent = translate_sent(sent,openai_api_key)
             st.text_area("Translated Sentence:", value=translated_sent, height=100)
 
 if __name__ == "__main__":
