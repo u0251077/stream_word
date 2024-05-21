@@ -74,18 +74,21 @@ def main():
     uploaded_file = st.file_uploader("選擇 Excel 文件", type='xlsx')
 
     if uploaded_file is not None:
+        if 'words' not in st.session_state:
+            st.session_state.words = read_excel_words(uploaded_file)  # 加載文件並保存到session_state
+            st.session_state.words_used = 0  # 初始化用過的單詞數量
 
-
-        
-        words = read_excel_words(uploaded_file)
-        if not words:
+        if not st.session_state.words:
             st.warning("Excel 文件中沒有找到任何單詞。")
             return
-            
 
-        # 检查是否已经选过单词，并在session state中保存
+        total_words = len(st.session_state.words)
+        words_used = st.session_state.words_used
+        st.write(f"已出現的單字量: {words_used} / 總單字量: {total_words}")
+
         if 'selected_word' not in st.session_state or st.button('Choose New Word'):
-            st.session_state.selected_word = random.choice(words)
+            st.session_state.selected_word = random.choice(st.session_state.words)
+            st.session_state.words_used += 1  # 更新用過的單詞數量
 
         st.write(f"Selected Word: {st.session_state.selected_word}")
         generate_sentence = st.button("Generate Sentence")
