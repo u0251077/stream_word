@@ -1,45 +1,86 @@
 import streamlit as st
-import pandas as pd
-import random
+from pathlib import Path
 from openai import OpenAI
+import openpyxl
+import random
 
-# 在 sidebar 配置 API
-api_key = st.sidebar.text_input("Enter your OpenAI API Key", type="password")
+api_key = "YOUR_API_KEY"
 client = OpenAI(api_key=api_key)
 
-# 文件上傳
-uploaded_file = st.file_uploader("Upload an Excel file", type="xlsx")
-words = []
-if uploaded_file:
-    df = pd.read_excel(uploaded_file)
-    words = df[df.columns[0]].dropna().tolist()  # 假设单词在第一列
-    st.write("Words loaded from Excel:", words)
+def translate(sent, text):
+    response = client.chat.completions.create(
+        model="gpt-3.5-turbo-0125",
+        messages=[
+            {"role": "system", "content": "You are asked to translate an English word into Traditional Chinese."},
+            {"role": "user", "content": f"Sentence is {sent} and word is {text}"}
+        ],
+        temperature=0.7,
+        max_tokens=64,
+        top_p=1
+    )
+    return response.choices[0].message.content
 
-def make_sentences(word):
+
+def translate_sent(sent):
+    response = client.chat.completions.create(
+        model="gpt-3.5-turbo-0125",
+        messages=[
+            {"role": "system", "content": "You are asked to translate an English sentence into Traditional Chinese."},
+            {"role": "user", "content": sent}
+        ],
+        temperature=0.7,
+        max_tokens=64,
+        top_p=1
+    )
+    return response.choices[0].message.content
+
+
+def makesentences(word):
     temperature = random.uniform(0.5, 1.0)
     variations = ["", ".", "!", "?"]
-    random_variation = random.choice(variations)
-    modified_text = word + random_variation
+    modified_word = word + random.choice(variations)
     response = client.chat.completions.create(
-        model="gpt-3.5-turbo",
+        model="gpt-3.5-turbo-0125",
         messages=[
-            {"role": "system", "content": "Make a sentence using the word."},
-            {"role": "user", "content": modified_text}
+            {"role": "system", "content": "Create an example sentence using the given English word."},
+            {"role": "user", "content": modified_word}
         ],
         temperature=temperature,
         max_tokens=64,
         top_p=1
     )
-    completion_text = response.choices[0].message.content
-    st.write("Generated Sentence:", completion_text)
-    return completion_text
+    return response.choices[0].message.content
 
-if st.button('Make Sentence from Random Word'):
-    if words:
-        word = random.choice(words)
-        st.write("Selected Word:", word)
-        make_sentences(word)
-else:
-    st.write("Upload an Excel file to start.")
 
-# 确保所有功能仍能正确执行 without the sound playing part
+def read_excel_words(filename):
+    words = []
+    try:
+        workbook = openpyxl.load_workbook(filename)
+        sheet = workbook.active
+        for row in sheet.iter_rows(values_only=True):
+            words.extend([cell for cell in row if isinstance(cell, str)])
+    except FileNotFoundError:
+        st.error("找不到指定的 Excel 檔案。")
+    return words
+
+
+def main():
+    st.title("文檔翻譯和例句生成")
+    uploaded_file = st.file_uploader("選擇 Excel 文件", type='xlsx')
+    if uploaded_file is not None:
+        words = read_excel_words(uploaded_file)
+        if not words:
+            st.warning("Excel 文件中沒有找到任何單詞。")
+            return
+        with st.form("word_form"):
+            random_word = random.choice(words)
+            st.write(f"Selected Word: {random_word}")
+            generate_sentence = st.form_submit_button("Generate Sentence")
+        if generate_sentence:
+            sent = makesentences(random_word)
+            st.text_area("Generated Sentence:", value=sent, height=100)
+            translated_sent = translate_sent(sent)
+            st.text_area("Translated Sentence:", value=translated_sent, height=100)
+
+if __name__ == "__main__":
+    main()
