@@ -1,75 +1,3 @@
-import streamlit as st
-from pathlib import Path
-from openai import OpenAI
-import openpyxl
-import random
-
-
-
-
-
-def translate(sent, text,api_key):
-    client = OpenAI(api_key=api_key)        
-    
-    response = client.chat.completions.create(
-        model="gpt-3.5-turbo-0125",
-        messages=[
-            {"role": "system", "content": "You are asked to translate an English word into Traditional Chinese."},
-            {"role": "user", "content": f"Sentence is {sent} and word is {text}"}
-        ],
-        temperature=0.7,
-        max_tokens=64,
-        top_p=1
-    )
-    return response.choices[0].message.content
-
-
-def translate_sent(sent,api_key):
-    client = OpenAI(api_key=api_key)            
-    response = client.chat.completions.create(
-        model="gpt-3.5-turbo-0125",
-        messages=[
-            {"role": "system", "content": "You are asked to translate an English sentence into Traditional Chinese."},
-            {"role": "user", "content": sent}
-        ],
-        temperature=0.7,
-        max_tokens=64,
-        top_p=1
-    )
-    return response.choices[0].message.content
-
-
-def makesentences(word,api_key):
-    client = OpenAI(api_key=api_key)        
-    temperature = random.uniform(0.5, 1.0)
-    variations = ["", ".", "!", "?"]
-    modified_word = word + random.choice(variations)
-    response = client.chat.completions.create(
-        model="gpt-3.5-turbo-0125",
-        messages=[
-            {"role": "system", "content": "Create an example sentence using the given English word."},
-            {"role": "user", "content": modified_word}
-        ],
-        temperature=temperature,
-        max_tokens=64,
-        top_p=1
-    )
-    return response.choices[0].message.content
-
-
-def read_excel_words(filename):
-    words = []
-    try:
-        workbook = openpyxl.load_workbook(filename)
-        sheet = workbook.active
-        for row in sheet.iter_rows(values_only=True):
-            words.extend([cell for cell in row if isinstance(cell, str)])
-    except FileNotFoundError:
-        st.error("找不到指定的 Excel 檔案。")
-    return words
-
-
-
 def main():
     with st.sidebar:
         openai_api_key = st.text_input("OpenAI API Key", key="chatbot_api_key", type="password")
@@ -85,6 +13,7 @@ def main():
         # 初始化 session_state
         if 'show_translation' not in st.session_state:
             st.session_state.show_translation = False
+            st.session_state.generated_sent = ""  # 初始化生成的句子保存
 
         with st.form("word_form"):
             random_word = random.choice(words)
@@ -93,11 +22,15 @@ def main():
 
         if generate_sentence:
             sent = makesentences(random_word, openai_api_key)
-            st.text_area("Generated Sentence:", value=sent, height=100)
-            st.session_state.show_translation = True  # 生成句子后允许显示翻译
+            st.session_state.generated_sent = sent  # 保存生成的句子
+            st.session_state.show_translation = True  # 允许显示翻译
             st.session_state.translated_sent = translate_sent(sent, openai_api_key)  # 保存翻译结果
 
-        if st.session_state.show_translation:  # 仅当标记为True时显示
+        # 只要已经保存了生成的句子，就显示它
+        if st.session_state.generated_sent:
+            st.text_area("Generated Sentence:", value=st.session_state.generated_sent, height=100)
+
+        if st.session_state.show_translation:  # 仅当标记为True时显示翻译按鈕
             show_translation_button = st.button("Show Translation")
             if show_translation_button:
                 st.text_area("Translated Sentence:", value=st.session_state.translated_sent, height=100)
