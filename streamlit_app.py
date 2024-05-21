@@ -4,8 +4,18 @@ from openai import OpenAI
 import openpyxl
 import random
 
-api_key = "YOUR_API_KEY"
-client = OpenAI(api_key=api_key)
+
+# 添加下拉選單至 sidebar 來選擇模型
+selected_model = st.sidebar.selectbox("Select Model", ["gpt-3.5-turbo", "gpt-4-turbo"])
+
+with st.sidebar:
+    openai_api_key = st.text_input("OpenAI API Key", key="chatbot_api_key", type="password")
+    "[Get an OpenAI API key](https://platform.openai.com/account/api-keys)"
+    "[View the source code](https://github.com/streamlit/llm-examples/blob/main/Chatbot.py)"
+    "[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/streamlit/llm-examples?quickstart=1)"
+
+
+
 
 def translate(sent, text):
     response = client.chat.completions.create(
@@ -65,9 +75,12 @@ def read_excel_words(filename):
 
 
 def main():
+    
     st.title("文檔翻譯和例句生成")
     uploaded_file = st.file_uploader("選擇 Excel 文件", type='xlsx')
     if uploaded_file is not None:
+        api_key = openai_api_key
+        client = OpenAI(api_key=api_key)        
         words = read_excel_words(uploaded_file)
         if not words:
             st.warning("Excel 文件中沒有找到任何單詞。")
