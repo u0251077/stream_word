@@ -109,9 +109,12 @@ def main():
             st.session_state.generated_sent = sent 
             st.session_state.show_translation = True  
             st.session_state.translated_sent = translate_sent(sent, openai_api_key)  
+            
 
         if 'generated_sent' in st.session_state:
             st.text_area("Generated Sentence:", value=st.session_state.generated_sent, height=100)
+            ttsM(st.session_state.generated_sent, openai_api_key)
+            
 
         if 'show_translation' in st.session_state and st.session_state.show_translation:
             show_translation_button = st.button("Show Translation")
