@@ -82,31 +82,28 @@ def main():
             st.warning("Excel 文件中沒有找到任何單詞。")
             return
             
-        while words:
-            random.shuffle(words)
-            word = random.choice(words)            
 
-            # 检查是否已经选过单词，并在session state中保存
-            if 'selected_word' not in st.session_state or st.button('Choose New Word'):
-                st.session_state.selected_word = random.choice(word)
-    
-            st.write(f"Selected Word: {st.session_state.selected_word}")
-            generate_sentence = st.button("Generate Sentence")
-    
-            if generate_sentence:
-                sent = makesentences(st.session_state.selected_word, openai_api_key)
-                st.session_state.generated_sent = sent 
-                st.session_state.show_translation = True  
-                st.session_state.translated_sent = translate_sent(sent, openai_api_key)  
-    
-            if 'generated_sent' in st.session_state:
-                st.text_area("Generated Sentence:", value=st.session_state.generated_sent, height=100)
-    
-            if 'show_translation' in st.session_state and st.session_state.show_translation:
-                show_translation_button = st.button("Show Translation")
-                if show_translation_button:
-                    st.text_area("Translated Sentence:", value=st.session_state.translated_sent, height=100)
-                    st.session_state.show_translation = False 
+        # 检查是否已经选过单词，并在session state中保存
+        if 'selected_word' not in st.session_state or st.button('Choose New Word'):
+            st.session_state.selected_word = random.choice(words)
+
+        st.write(f"Selected Word: {st.session_state.selected_word}")
+        generate_sentence = st.button("Generate Sentence")
+
+        if generate_sentence:
+            sent = makesentences(st.session_state.selected_word, openai_api_key)
+            st.session_state.generated_sent = sent 
+            st.session_state.show_translation = True  
+            st.session_state.translated_sent = translate_sent(sent, openai_api_key)  
+
+        if 'generated_sent' in st.session_state:
+            st.text_area("Generated Sentence:", value=st.session_state.generated_sent, height=100)
+
+        if 'show_translation' in st.session_state and st.session_state.show_translation:
+            show_translation_button = st.button("Show Translation")
+            if show_translation_button:
+                st.text_area("Translated Sentence:", value=st.session_state.translated_sent, height=100)
+                st.session_state.show_translation = False 
 
 if __name__ == "__main__":
     main()
