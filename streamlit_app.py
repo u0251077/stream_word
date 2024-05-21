@@ -89,7 +89,11 @@ def main():
             sent = makesentences(random_word,openai_api_key)
             st.text_area("Generated Sentence:", value=sent, height=100)
             translated_sent = translate_sent(sent,openai_api_key)
-            st.text_area("Translated Sentence:", value=translated_sent, height=100)
+            show_translation_button = st.button("Show Translation")
+            if show_translation_button:  # 新增條件，只有在點擊此按鈕後才顯示翻譯結果
+                translated_sent = translate_sent(sent, openai_api_key)
+                st.text_area("Translated Sentence:", value=translated_sent, height=100)
+
 
 if __name__ == "__main__":
     main()
