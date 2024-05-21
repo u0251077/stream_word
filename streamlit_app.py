@@ -98,9 +98,10 @@ def main():
         if 'selected_word' not in st.session_state or st.button('Choose New Word'):
             st.session_state.selected_word = random.choice(st.session_state.words)
             st.session_state.words_used += 1  # 更新用過的單詞數量
+            ttsM(st.session_state.selected_word, openai_api_key)
+            
 
         st.write(f"Selected Word: {st.session_state.selected_word}")
-        ttsM(st.session_state.selected_word, openai_api_key)
         generate_sentence = st.button("Generate Sentence")
 
         if generate_sentence:
