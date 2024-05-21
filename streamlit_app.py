@@ -86,6 +86,7 @@ def main():
             st.write(f"Selected Word: {random_word}")
             generate_sentence = st.form_submit_button("Generate Sentence")
         if generate_sentence:
+            generate_sentence = False
             sent = makesentences(random_word,openai_api_key)
             st.text_area("Generated Sentence:", value=sent, height=100)
             translated_sent = translate_sent(sent,openai_api_key)
