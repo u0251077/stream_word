@@ -5,6 +5,16 @@ import openpyxl
 import random
 
 
+def ttsM(text,api_key):
+    client = OpenAI(api_key=api_key)            
+    response = client.audio.speech.create(
+    model="tts-1",
+    voice="alloy",
+    input= str(text)
+    )
+    speech_file_path = Path(__file__).parent / "speech.mp3"
+    response.stream_to_file(speech_file_path)
+    st.audio(speech_file_path, format="audio/mpeg", loop=True)
 
 
 
@@ -91,6 +101,7 @@ def main():
             st.session_state.words_used += 1  # 更新用過的單詞數量
 
         st.write(f"Selected Word: {st.session_state.selected_word}")
+        ttsM({st.session_state.selected_word},openai_api_key)
         generate_sentence = st.button("Generate Sentence")
 
         if generate_sentence:
