@@ -13,7 +13,7 @@ def ttsM(text,api_key):
     input= str(text)
     )
     response.stream_to_file("speech.mp3")
-    st.audio("speech.mp3", format="audio/mpeg", loop=True)
+    st.audio("speech.mp3", format="audio/mpeg", loop=False, autoplay=True )
 
 
 
@@ -100,7 +100,7 @@ def main():
             st.session_state.words_used += 1  # 更新用過的單詞數量
 
         st.write(f"Selected Word: {st.session_state.selected_word}")
-        ttsM("resume",openai_api_key)
+        ttsM(st.session_state.selected_word, openai_api_key)
         generate_sentence = st.button("Generate Sentence")
 
         if generate_sentence:
