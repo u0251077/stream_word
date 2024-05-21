@@ -121,7 +121,6 @@ def main():
             if show_translation_button:
                 st.text_area("Translated Sentence:", value=st.session_state.translated_sent, height=100)
                 st.session_state.generated_sent = False 
-                st.session_state.show_translation = False 
 
 if __name__ == "__main__":
     main()
