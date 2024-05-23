@@ -3,7 +3,23 @@ from pathlib import Path
 from openai import OpenAI
 import openpyxl
 import random
+def get_adjusted_words(words_dict):
+    """根据熟悉度调整单词出现的频率。"""
+    repeated_words = []
+    for word, familiarity in words_dict.items():
+        if familiarity == 'not_familiar':
+            repeated_words.extend([word]*3)  # 不熟悉的单词出现频率增加
+        elif familiarity == 'familiar':
+            continue  # 熟悉的单词将被排除在外
+        else:
+            repeated_words.append(word)  # 正常频率
+    return repeated_words
 
+def update_familiarity(word, familiarity):
+    """更新单词的熟悉度。"""
+    if 'words_familiarity' not in st.session_state:
+        st.session_state.words_familiarity = {}
+    st.session_state.words_familiarity[word] = familiarity
 
 def ttsM(text,api_key):
     client = OpenAI(api_key=api_key)            
@@ -85,49 +101,44 @@ def main():
 
     if uploaded_file is not None:
         if 'words' not in st.session_state:
-            st.session_state.words = read_excel_words(uploaded_file)  # 加載文件並保存到session_state
-            st.session_state.words_used = 0  # 初始化用過的單詞數量
+            # 加载文件并保存到session_state
+            st.session_state.words = read_excel_words(uploaded_file)
+            st.session_state.words_used = 0
 
         if not st.session_state.words:
-            st.warning("Excel 文件中沒有找到任何單詞。")
+            st.warning("Excel 文件中沒有找到任何单词。")
             return
 
-        total_words = len(st.session_state.words)
+        # 调整单词出现频率
+        adjusted_words = get_adjusted_words(st.session_state.words)
+        total_words = len(adjusted_words)
         words_used = st.session_state.words_used
         st.write(f"已出現的單字量: {words_used} / 總單字量: {total_words}")
 
-        # 在 main 函数中，当有播放新音频的操作时，重设 session state
         if 'selected_word' not in st.session_state or st.button('Choose New Word'):
-            st.session_state.selected_word = random.choice(st.session_state.words)
-            st.session_state.words_used += 1
-            st.session_state.played = False  # 重設播放狀態
-            st.session_state.generated_sent = None  # Reset
-            st.session_state.translated_sent = None  # Reset
-            st.session_state.show_translation = False  # Reset            
+            st.session_state.selected_word = random.choice(adjusted_words)
             ttsM(st.session_state.selected_word, openai_api_key)
-            
 
         st.write(f"Selected Word: {st.session_state.selected_word}")
-        generate_sentence = st.button("Generate Sentence")
 
+        # 为单词熟悉度提供选项
+        familiarity_choice = st.radio("你對這個單字的熟悉程度怎麼樣？", ('熟悉', '不熟悉', '一般'))
+        if st.button('Update Familiarity'):
+            update_familiarity(st.session_state.selected_word, familiarity_choice)
+
+        generate_sentence = st.button("Generate Sentence")
         if generate_sentence:
             sent = makesentences(st.session_state.selected_word, openai_api_key)
-            st.session_state.generated_sent = sent 
-            st.session_state.show_translation = True  
-            st.session_state.translated_sent = translate_sent(sent, openai_api_key)  
-            st.session_state.played = False  # 重設播放狀態
-            
+            st.session_state.generated_sent = sent
+            st.session_state.translated_sent = translate_sent(sent, openai_api_key)
+            st.session_state.played = False
 
         if 'generated_sent' in st.session_state:
             st.text_area("Generated Sentence:", value=st.session_state.generated_sent, height=100)
             ttsM(st.session_state.generated_sent, openai_api_key)
-            
 
-        if 'show_translation' in st.session_state and st.session_state.show_translation:
-            show_translation_button = st.button("Show Translation")
-            if show_translation_button:
-                st.text_area("Translated Sentence:", value=st.session_state.translated_sent, height=100)
-                st.session_state.generated_sent = None 
+        if 'translated_sent' in st.session_state and st.button("Show Translation"):
+            st.text_area("Translated Sentence:", value=st.session_state.translated_sent, height=100)
 
 if __name__ == "__main__":
     main()
