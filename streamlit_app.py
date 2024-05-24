@@ -3,7 +3,7 @@ from pathlib import Path
 from openai import OpenAI
 import openpyxl
 import random
-
+from datetime import datetime, timedelta
 
 def ttsM(text,api_key):
     client = OpenAI(api_key=api_key)            
@@ -78,6 +78,52 @@ def read_excel_words(filename):
         st.error("找不到指定的 Excel 檔案。")
     return words
 def main():
+
+  
+    
+    # 初始化卡片列表
+    cards = []
+    
+    # 起始日期
+    start_date = datetime(2024, 5, 24)
+    
+    # 生成240個卡片
+    for i in range(1, 241):
+        card = {"name": f"Card {i}", "start_date": start_date, "due_dates": []}
+        for j in range(30):
+            card["due_dates"].append(start_date + timedelta(days=j))
+        cards.append(card)
+    
+        # 更新起始日期
+        start_date += timedelta(days=1)
+    
+    # 計算每個卡片的截止日期
+    for card in cards:
+        card["due_dates"] = [
+            card["start_date"],
+            card["start_date"] + timedelta(days=1),
+            card["start_date"] + timedelta(days=3),
+            card["start_date"] + timedelta(days=7),
+            card["start_date"] + timedelta(days=14),
+            card["start_date"] + timedelta(days=28),
+        ]
+    
+    # 選擇當前日期
+    today = st.date_input("Select the date", value=datetime.today())
+    
+    # 顯示當天的任務和進度
+    st.title("Tasks Due Today")
+    tasks_today = False
+    for card in cards:
+        if today in [due_date.date() for due_date in card["due_dates"]]:
+            days_since_start = (today - card["start_date"].date()).days + 1
+            st.write(f"{card['name']}: 進度 - 第{days_since_start}天")
+            tasks_today = True
+    if not tasks_today:
+        st.write("No tasks due today.")
+        
+
+    
     with st.sidebar:
         openai_api_key = st.text_input("OpenAI API Key", key="chatbot_api_key", type="password")
     st.title("文檔翻譯和例句生成")
