@@ -67,10 +67,10 @@ def makesentences(word, api_key):
     return response.choices[0].message.content
 
 
-def read_excel_words(filename):
+def read_excel_words(file):
     words = []
     try:
-        workbook = openpyxl.load_workbook(filename)
+        workbook = openpyxl.load_workbook(file)
         sheet = workbook.active
         for row in sheet.iter_rows(values_only=True):
             words.extend([cell for cell in row if isinstance(cell, str)])
@@ -127,9 +127,9 @@ def main():
     uploaded_file = st.file_uploader("選擇 Excel 文件", type='xlsx')
 
     if uploaded_file is not None:
-        if 'words' not in st.session_state:
-            st.session_state.words = read_excel_words(uploaded_file)  # 加載文件並保存到session_state
-            st.session_state.used_words = []  # 初始化已用過的單詞列表
+        # 每次上傳新文件時，重置單字列表和已用過的單字列表
+        st.session_state.words = read_excel_words(uploaded_file)
+        st.session_state.used_words = []  # 初始化已用過的單詞列表
 
         if not st.session_state.words:
             st.warning("Excel 文件中沒有找到任何單詞。")
