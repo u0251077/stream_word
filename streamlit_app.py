@@ -135,10 +135,6 @@ def main():
             st.warning("Excel 文件中沒有找到任何單詞。")
             return
 
-        total_words = len(st.session_state.words)
-        used_words = len(st.session_state.used_words)
-        st.write(f"已出現的單字量: {used_words} / 總單字量: {total_words}")
-
         # 選擇新單詞時將選過的單詞從列表中移除
         if 'selected_word' not in st.session_state or st.button('Choose New Word'):
             if len(st.session_state.words) > 0:
