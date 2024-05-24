@@ -5,12 +5,12 @@ import openpyxl
 import random
 from datetime import datetime, timedelta
 
-def ttsM(text,api_key):
+def ttsM(text, api_key):
     client = OpenAI(api_key=api_key)            
     response = client.audio.speech.create(
-    model="tts-1",
-    voice="alloy",
-    input= str(text)
+        model="tts-1",
+        voice="alloy",
+        input=str(text)
     )
     response.stream_to_file("speech.mp3")
     if not st.session_state.get('played', False):
@@ -18,7 +18,7 @@ def ttsM(text,api_key):
         st.session_state['played'] = True
 
 
-def translate(sent, text,api_key):
+def translate(sent, text, api_key):
     client = OpenAI(api_key=api_key)        
 
     response = client.chat.completions.create(
@@ -34,7 +34,7 @@ def translate(sent, text,api_key):
     return response.choices[0].message.content
 
 
-def translate_sent(sent,api_key):
+def translate_sent(sent, api_key):
     client = OpenAI(api_key=api_key)            
     response = client.chat.completions.create(
         model="gpt-3.5-turbo-0125",
@@ -49,7 +49,7 @@ def translate_sent(sent,api_key):
     return response.choices[0].message.content
 
 
-def makesentences(word,api_key):
+def makesentences(word, api_key):
     client = OpenAI(api_key=api_key)        
     temperature = random.uniform(0.5, 1.0)
     variations = ["", ".", "!", "?"]
@@ -77,10 +77,9 @@ def read_excel_words(filename):
     except FileNotFoundError:
         st.error("找不到指定的 Excel 檔案。")
     return words
-def main():
 
-  
-    
+
+def main():
     # 初始化卡片列表
     cards = []
     
@@ -121,8 +120,6 @@ def main():
             tasks_today = True
     if not tasks_today:
         st.write("No tasks due today.")
-        
-
     
     with st.sidebar:
         openai_api_key = st.text_input("OpenAI API Key", key="chatbot_api_key", type="password")
@@ -132,26 +129,29 @@ def main():
     if uploaded_file is not None:
         if 'words' not in st.session_state:
             st.session_state.words = read_excel_words(uploaded_file)  # 加載文件並保存到session_state
-            st.session_state.words_used = 0  # 初始化用過的單詞數量
+            st.session_state.used_words = []  # 初始化已用過的單詞列表
 
         if not st.session_state.words:
             st.warning("Excel 文件中沒有找到任何單詞。")
             return
 
         total_words = len(st.session_state.words)
-        words_used = st.session_state.words_used
-        st.write(f"已出現的單字量: {words_used} / 總單字量: {total_words}")
+        used_words = len(st.session_state.used_words)
+        st.write(f"已出現的單字量: {used_words} / 總單字量: {total_words}")
 
-        # 在 main 函数中，当有播放新音频的操作时，重设 session state
+        # 選擇新單詞時將選過的單詞從列表中移除
         if 'selected_word' not in st.session_state or st.button('Choose New Word'):
-            st.session_state.selected_word = random.choice(st.session_state.words)
-            st.session_state.words_used += 1
-            st.session_state.played = False  # 重設播放狀態
-            st.session_state.generated_sent = None  # Reset
-            st.session_state.translated_sent = None  # Reset
-            st.session_state.show_translation = False  # Reset            
-            ttsM(st.session_state.selected_word, openai_api_key)
-            
+            if len(st.session_state.words) > 0:
+                st.session_state.selected_word = random.choice(st.session_state.words)
+                st.session_state.words.remove(st.session_state.selected_word)
+                st.session_state.used_words.append(st.session_state.selected_word)
+                st.session_state.played = False  # 重設播放狀態
+                st.session_state.generated_sent = None  # Reset
+                st.session_state.translated_sent = None  # Reset
+                st.session_state.show_translation = False  # Reset            
+                ttsM(st.session_state.selected_word, openai_api_key)
+            else:
+                st.warning("所有單詞都已經使用完畢。")
 
         st.write(f"Selected Word: {st.session_state.selected_word}")
         generate_sentence = st.button("Generate Sentence")
@@ -162,12 +162,10 @@ def main():
             st.session_state.show_translation = True  
             st.session_state.translated_sent = translate_sent(sent, openai_api_key)  
             st.session_state.played = False  # 重設播放狀態
-            
 
         if 'generated_sent' in st.session_state:
             st.text_area("Generated Sentence:", value=st.session_state.generated_sent, height=100)
             ttsM(st.session_state.generated_sent, openai_api_key)
-            
 
         if 'show_translation' in st.session_state and st.session_state.show_translation:
             show_translation_button = st.button("Show Translation")
