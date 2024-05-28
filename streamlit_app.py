@@ -111,7 +111,7 @@ def main():
   if uploaded_file is not None:
       # 每次上傳新文件時，重置單字列表和已用過的單字列表
       st.session_state.words = read_excel_words(uploaded_file)
-      st.session_state.used_words = [] # 初始化已用過的單詞列表
+      st.session_state.used_words = [] 
 
   if 'words' not in st.session_state or not st.session_state.words:
       st.warning("Excel 文件中沒有找到任何單詞。")
