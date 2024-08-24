@@ -78,7 +78,7 @@ def main():
         if st.button("下一個單詞"):
             st.session_state.current_word = random.choice(words)
             st.session_state.current_sentence = generate_sentence(st.session_state.current_word, model)
-            st.experimental_rerun()
+            st.rerun()  # 這裡使用 st.rerun() 替代 st.experimental_rerun()
 
     except Exception as e:
         st.error(f"發生錯誤: {str(e)}")
