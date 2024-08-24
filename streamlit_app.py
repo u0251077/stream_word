@@ -1,167 +1,61 @@
 import streamlit as st
-from openai import OpenAI
-import openpyxl
+import pandas as pd
+import os
+import google.generativeai as genai
 import random
-from datetime import datetime, timedelta
 
-def ttsM(text, api_key):
-    client = OpenAI(api_key=api_key)
-    response = client.audio.speech.create(
-        model="tts-1",
-        voice="alloy",
-        input=str(text)
-    )
-    response.stream_to_file("speech.mp3")
-    if not st.session_state.get('played', False):
-        st.audio("speech.mp3", format="audio/mpeg", loop=False, autoplay=True)
-        st.session_state['played'] = True
+# 配置 Google AI API
+genai.configure(api_key='你的_API_金鑰')
+model = genai.GenerativeModel('gemini-1.5-flash')
 
-def translate(sent, text, api_key):
-    client = OpenAI(api_key=api_key)
-    response = client.chat.completions.create(
-        model="gpt-3.5-turbo-0125",
-        messages=[
-            {"role": "system", "content": "You are asked to translate an English word into Traditional Chinese."},
-            {"role": "user", "content": f"Sentence is {sent} and word is {text}"}
-        ],
-        temperature=0.7,
-        max_tokens=64,
-        top_p=1
-    )
-    return response.choices[0].message.content
-
-def translate_sent(sent, api_key):
-    client = OpenAI(api_key=api_key)
-    response = client.chat.completions.create(
-        model="gpt-3.5-turbo-0125",
-        messages=[
-            {"role": "system", "content": "You are asked to translate an English sentence into Traditional Chinese."},
-            {"role": "user", "content": sent}
-        ],
-        temperature=0.7,
-        max_tokens=64,
-        top_p=1
-    )
-    return response.choices[0].message.content
-
-def makesentences(word, api_key):
-    client = OpenAI(api_key=api_key)
-    temperature = random.uniform(0.5, 1.0)
-    variations = ["", ".", "!", "?"]
-    modified_word = word + random.choice(variations)
-    response = client.chat.completions.create(
-        model="gpt-3.5-turbo-0125",
-        messages=[
-            {"role": "system", "content": "Create an example sentence using the given English word."},
-            {"role": "user", "content": modified_word}
-        ],
-        temperature=temperature,
-        max_tokens=64,
-        top_p=1
-    )
-    return response.choices[0].message.content
-
-def read_excel_words(file):
+# 函數:讀取所有 Excel 檔案中的單詞
+def read_excel_files(folder_path):
     words = []
-    try:
-        workbook = openpyxl.load_workbook(file)
-        sheet = workbook.active
-        for row in sheet.iter_rows(values_only=True):
-            words.extend([cell for cell in row if isinstance(cell, str)])
-    except FileNotFoundError:
-        st.error("找不到指定的 Excel 檔案。")
-    return words
+    for file in os.listdir(folder_path):
+        if file.endswith('.xlsx'):
+            df = pd.read_excel(os.path.join(folder_path, file))
+            words.extend(df['單詞列的名稱'].tolist())  # 請替換為實際的列名
+    return list(set(words))  # 移除重複單詞
 
+# 函數:使用 AI 生成句子
+def generate_sentence(word):
+    prompt = f"使用單詞 '{word}' 造一個符合多益考試難度的英語句子。"
+    response = model.generate_content(prompt)
+    return response.text
+
+# 函數:檢查翻譯
+def check_translation(original, translation):
+    prompt = f"請判斷以下翻譯是否正確。原句: '{original}' 翻譯: '{translation}' 請回答 '正確' 或 '不正確'，並簡要說明原因。"
+    response = model.generate_content(prompt)
+    return response.text
+
+# Streamlit 應用
 def main():
-    # 初始化卡片列表
-    cards = []
-    
-    # 起始日期
-    start_date = datetime(2024, 5, 24)
-    
-    # 生成240個卡片
-    for i in range(1, 241):
-        card = {"name": f"Card {i}", "start_date": start_date, "due_dates": []}
-        for j in range(30):
-            card["due_dates"].append(start_date + timedelta(days=j))
-        cards.append(card)
-    
-        # 更新起始日期
-        start_date += timedelta(days=1)
-    
-    # 計算每個卡片的截止日期
-    for card in cards:
-        card["due_dates"] = [
-            card["start_date"],
-            card["start_date"] + timedelta(days=1),
-            card["start_date"] + timedelta(days=3),
-            card["start_date"] + timedelta(days=7),
-            card["start_date"] + timedelta(days=14),
-            card["start_date"] + timedelta(days=28),
-        ]
-    
-    # 選擇當前日期
-    today = st.date_input("Select the date", value=datetime.today())
-    
-    # 顯示當天的任務和進度
-    st.title("Tasks Due Today")
-    tasks_today = False
-    for card in cards:
-        if today in [due_date.date() for due_date in card["due_dates"]]:
-            days_since_start = (today - card["start_date"].date()).days + 1
-            st.write(f"{card['name']}: 進度 - 第{days_since_start}天")
-            tasks_today = True
-    if not tasks_today:
-        st.write("No tasks due today.")
-    
-    with st.sidebar:
-        openai_api_key = st.text_input("OpenAI API Key", key="chatbot_api_key", type="password")
-    st.title("文檔翻譯和例句生成")
-    uploaded_file = st.file_uploader("選擇 Excel 文件", type='xlsx')
+    st.title("英語學習助手")
 
-    if uploaded_file is not None:
-        # 每次上傳新文件時，重置單字列表和已用過的單字列表
-        st.session_state.words = read_excel_words(uploaded_file)
-        st.session_state.used_words = []  # 初始化已用過的單詞列表
+    # 讀取單詞
+    words = read_excel_files('data')
 
-    if 'words' not in st.session_state or not st.session_state.words:
-        st.warning("Excel 文件中沒有找到任何單詞。")
-        return
+    if 'current_word' not in st.session_state:
+        st.session_state.current_word = random.choice(words)
+        st.session_state.current_sentence = generate_sentence(st.session_state.current_word)
 
-    # 選擇新單詞時將選過的單詞從列表中移除
-    if 'selected_word' not in st.session_state or st.button('Choose New Word'):
-        if len(st.session_state.words) > 0:
-            st.session_state.selected_word = random.choice(st.session_state.words)
-            st.session_state.words.remove(st.session_state.selected_word)
-            st.session_state.used_words.append(st.session_state.selected_word)
-            st.session_state.played = False  # 重設播放狀態
-            st.session_state.generated_sent = None  # Reset
-            st.session_state.translated_sent = None  # Reset
-            st.session_state.show_translation = False  # Reset
-            ttsM(st.session_state.selected_word, openai_api_key)
+    st.write(f"句子: {st.session_state.current_sentence}")
+
+    # 使用者輸入翻譯
+    user_translation = st.text_input("請輸入你的翻譯:")
+
+    if st.button("提交翻譯"):
+        if user_translation:
+            result = check_translation(st.session_state.current_sentence, user_translation)
+            st.write(result)
         else:
-            st.warning("所有單詞都已經使用完畢。")
+            st.write("請輸入翻譯後再提交。")
 
-    if 'selected_word' in st.session_state:
-        st.write(f"Selected Word: {st.session_state.selected_word}")
-        generate_sentence = st.button("Generate Sentence")
-
-        if generate_sentence:
-            sent = makesentences(st.session_state.selected_word, openai_api_key)
-            st.session_state.generated_sent = sent
-            st.session_state.show_translation = True
-            st.session_state.translated_sent = translate_sent(sent, openai_api_key)
-            st.session_state.played = False  # 重設播放狀態
-
-        if 'generated_sent' in st.session_state:
-            st.text_area("Generated Sentence:", value=st.session_state.generated_sent, height=100)
-            ttsM(st.session_state.generated_sent, openai_api_key)
-
-        if 'show_translation' in st.session_state and st.session_state.show_translation:
-            show_translation_button = st.button("Show Translation")
-            if show_translation_button:
-                st.text_area("Translated Sentence:", value=st.session_state.translated_sent, height=100)
-                st.session_state.generated_sent = None
+    if st.button("下一個句子"):
+        st.session_state.current_word = random.choice(words)
+        st.session_state.current_sentence = generate_sentence(st.session_state.current_word)
+        st.experimental_rerun()
 
 if __name__ == "__main__":
     main()
