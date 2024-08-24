@@ -8,13 +8,20 @@ import random
 genai.configure(api_key='你的_API_金鑰')
 model = genai.GenerativeModel('gemini-1.5-flash')
 
-# 函數:讀取所有 Excel 檔案中的單詞
 def read_excel_files(folder_path):
     words = []
     for file in os.listdir(folder_path):
         if file.endswith('.xlsx'):
-            df = pd.read_excel(os.path.join(folder_path, file))
-            words.extend(df['單詞列的名稱'].tolist())  # 請替換為實際的列名
+            try:
+                df = pd.read_excel(os.path.join(folder_path, file), header=None)
+                # 假設單詞在第一列
+                if not df.empty:
+                    words.extend(df[0].dropna().tolist())
+                else:
+                    print(f"Warning: {file} is empty")
+            except Exception as e:
+                print(f"Error reading {file}: {str(e)}")
+    
     return list(set(words))  # 移除重複單詞
 
 # 函數:使用 AI 生成句子
