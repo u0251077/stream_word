@@ -2,3 +2,6 @@ streamlit>=1.28
 openai>=1.2
 pandas
 openpyxl
+pandas
+google-generativeai
+
