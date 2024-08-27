@@ -25,7 +25,7 @@ def generate_sentence(word, api_key):
     openai.api_key = api_key
     prompt = f"使用單詞 '{word}' 造一個符合多益考試難度的英語句子。"
     response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
+        model="gpt-4o-mini",
         messages=[
             {"role": "system", "content": "You are a helpful assistant that generates English sentences for language learners."},
             {"role": "user", "content": prompt}
