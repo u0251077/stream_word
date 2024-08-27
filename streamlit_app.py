@@ -53,7 +53,7 @@ def main():
     with st.sidebar:
         st.header("設置")
         openai_api_key = st.text_input("OpenAI API Key", key="openai_api_key", type="password")
-        selected_model = st.selectbox("選擇模型", ["gpt-3.5-turbo", "gpt-4", "gpt-4-turbo"])
+        selected_model = st.selectbox("選擇模型", ["gpt-4o-mini"])
         "[取得 OpenAI API key](https://platform.openai.com/account/api-keys)"
         "[查看源代碼](https://github.com/your-repo-link)"
 
