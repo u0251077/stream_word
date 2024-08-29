@@ -88,7 +88,7 @@ def main():
     st.caption("🚀 由 OpenAI 和 Streamlit 提供支持的英語學習工具")
 
     # Predefined array of completed dates
-    habit_dates = ["2024/08/29", "2024/08/30", "2024/09/01", "2024/09/03", "2024/09/05"]  # Add more dates as needed
+    habit_dates = ["2024/08/28","2024/08/29", "2024/08/30", "2024/09/01", "2024/09/03", "2024/09/05"]  # Add more dates as needed
 
     # Sidebar setup
     with st.sidebar:
