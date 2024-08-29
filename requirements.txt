@@ -4,4 +4,6 @@ pandas
 openpyxl
 pandas
 google-generativeai
-
+datetime
+plotly
+random
