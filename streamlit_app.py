@@ -8,38 +8,39 @@ from datetime import datetime, timedelta
 
 # ... [Previous functions remain unchanged] ...
 
-# New function to create the habit tracker heatmap
+# Updated function to create the habit tracker heatmap
 def create_habit_heatmap(completed_dates):
-    # Create a date range for the past year
+    # Create a date range for the entire year
     end_date = datetime.now()
-    start_date = end_date - timedelta(days=365)
+    start_date = end_date.replace(month=1, day=1)  # Start from January 1st of the current year
     date_range = pd.date_range(start=start_date, end=end_date)
 
     # Create a DataFrame with all dates and their completion status
     df = pd.DataFrame({'date': date_range})
-    df['completed'] = df['date'].dt.strftime('%Y-%m-%d').isin(completed_dates)
+    df['completed'] = df['date'].dt.strftime('%Y/%m/%d').isin(completed_dates)
     df['weekday'] = df['date'].dt.weekday
-    df['week'] = df['date'].dt.to_period('W').apply(lambda r: r.start_time)
+    df['week'] = df['date'].dt.strftime('%Y-W%W')
 
     # Create the heatmap
     fig = go.Figure(data=go.Heatmap(
         z=df['completed'].astype(int),
         x=df['week'],
         y=df['weekday'],
-        colorscale=[[0, 'rgb(255,255,255)'], [1, 'rgb(0,128,0)']],
+        colorscale=[[0, 'rgb(240,240,240)'], [1, 'rgb(0,128,0)']],
         showscale=False
     ))
 
     fig.update_layout(
-        title='Habit Tracker Heatmap',
-        xaxis_title='Week',
-        yaxis_title='Weekday',
+        title='年度學習追蹤',
+        xaxis_title='週',
+        yaxis_title='星期',
         yaxis=dict(
             tickmode='array',
             tickvals=[0, 1, 2, 3, 4, 5, 6],
-            ticktext=['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+            ticktext=['週一', '週二', '週三', '週四', '週五', '週六', '週日']
         ),
-        height=400
+        height=300,
+        margin=dict(l=40, r=40, t=40, b=20)
     )
 
     return fig
@@ -51,6 +52,9 @@ def main():
     st.title("📚 英語學習助手")
     st.caption("🚀 由 OpenAI 和 Streamlit 提供支持的英語學習工具")
 
+    # Predefined array of completed dates
+    habit_dates = ["2024/08/29", "2024/08/30", "2024/09/01", "2024/09/03", "2024/09/05"]  # Add more dates as needed
+
     # Sidebar setup
     with st.sidebar:
         st.header("設置")
@@ -58,15 +62,6 @@ def main():
         selected_model = st.selectbox("選擇模型", ["gpt-4-0314", "gpt-3.5-turbo"])
         "[取得 OpenAI API key](https://platform.openai.com/account/api-keys)"
         "[查看源代碼](https://github.com/your-repo-link)"
-
-        # Habit Tracker input
-        st.subheader("Habit Tracker")
-        habit_date = st.date_input("選擇完成日期")
-        if st.button("添加完成日期"):
-            if "completed_dates" not in st.session_state:
-                st.session_state.completed_dates = []
-            st.session_state.completed_dates.append(habit_date.strftime('%Y-%m-%d'))
-            st.success(f"已添加完成日期: {habit_date}")
 
     if not openai_api_key:
         st.info("請在側邊欄輸入你的 OpenAI API 金鑰以開始。")
@@ -115,10 +110,9 @@ def main():
             st.rerun()
 
         # Display Habit Tracker Heatmap
-        if "completed_dates" in st.session_state:
-            st.subheader("學習習慣追蹤")
-            fig = create_habit_heatmap(st.session_state.completed_dates)
-            st.plotly_chart(fig, use_container_width=True)
+        st.subheader("學習習慣追蹤")
+        fig = create_habit_heatmap(habit_dates)
+        st.plotly_chart(fig, use_container_width=True)
 
     except Exception as e:
         st.error(f"發生錯誤: {str(e)}")
