@@ -6,8 +6,43 @@ import random
 import plotly.graph_objects as go
 from datetime import datetime, timedelta
 
-# ... [Previous functions remain unchanged] ...
+# 函數: 讀取所有 Excel 檔案中的單詞
+def read_excel_files(folder_path):
+    words = []
+    for file in os.listdir(folder_path):
+        if file.endswith('.xlsx'):
+            try:
+                df = pd.read_excel(os.path.join(folder_path, file), header=None)
+                if not df.empty:
+                    words.extend(df[0].dropna().tolist())
+                else:
+                    st.warning(f"警告: {file} 是空的")
+            except Exception as e:
+                st.error(f"讀取 {file} 時出錯: {str(e)}")
+    
+    return list(set(words))  # 移除重複單詞
 
+# 函數: 使用 OpenAI API 生成句子
+def generate_sentence(word, client, model):
+    response = client.chat.completions.create(
+        model=model,
+        messages=[
+            {"role": "system", "content": "You are a helpful assistant that generates English sentences for language learners."},
+            {"role": "user", "content": f"使用單詞 '{word}' 造一個符合多益考試難度的英語句子。"}
+        ]
+    )
+    return response.choices[0].message.content.strip()
+
+# 函數: 檢查翻譯
+def check_translation(original, translation, client, model):
+    response = client.chat.completions.create(
+        model=model,
+        messages=[
+            {"role": "system", "content": "You are a helpful assistant that checks English to Chinese translations."},
+            {"role": "user", "content": f"請判斷以下翻譯是否正確。原句: '{original}' 翻譯: '{translation}' 請回答 '正確' 或 '不正確'，並簡要說明原因。"}
+        ]
+    )
+    return response.choices[0].message.content.strip()
 # Updated function to create the habit tracker heatmap
 def create_habit_heatmap(completed_dates):
     # Create a date range for the entire year
