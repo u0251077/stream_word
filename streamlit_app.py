@@ -104,6 +104,10 @@ def main():
 
     client = OpenAI(api_key=openai_api_key)
 
+    # Display Habit Tracker Heatmap
+    st.subheader("學習習慣追蹤")
+    fig = create_habit_heatmap(habit_dates)
+    st.plotly_chart(fig, use_container_width=True)
     try:
         # Read words
         words = read_excel_files('data')
@@ -144,10 +148,7 @@ def main():
             st.session_state.messages.append({"role": "assistant", "content": new_message})
             st.rerun()
 
-        # Display Habit Tracker Heatmap
-        st.subheader("學習習慣追蹤")
-        fig = create_habit_heatmap(habit_dates)
-        st.plotly_chart(fig, use_container_width=True)
+
 
     except Exception as e:
         st.error(f"發生錯誤: {str(e)}")
