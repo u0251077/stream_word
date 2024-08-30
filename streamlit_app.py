@@ -90,6 +90,7 @@ def main():
     # Predefined array of completed dates
     habit_dates = ["2024/07/28", 
                    "2024/08/29",
+                   "2024/08/30",
                   ]  # Add more dates as needed
 
     # Sidebar setup
