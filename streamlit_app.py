@@ -91,6 +91,7 @@ def main():
     habit_dates = ["2024/07/28", 
                    "2024/08/29",
                    "2024/08/30",
+                   "2024/09/02"
                   ]  # Add more dates as needed
 
     # Sidebar setup
